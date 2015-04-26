@@ -1,6 +1,6 @@
 open util/integer
 open lib/graph
-open lib/basicproperties
+open lib/basicProperties
 
 pred contains3Cycle (g : Graph) {
     some disj x, y, z : Edge {
