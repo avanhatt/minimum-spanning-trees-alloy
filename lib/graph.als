@@ -1,7 +1,7 @@
 open util/integer
 
 sig Vertex {
-    neighbors : set Vertex,
+    neighbors : set Vertex -> Graph,
     successors : set Vertex
 }
 
@@ -11,23 +11,25 @@ sig Edge {
     weight: Int
 }
 
-one sig Graph {
+sig Graph {
     edges: set Edge,
     vertices: set Vertex
 }
 
 fact neighbors {
-    all vertex : Vertex |
-        all edge : Edge {
-            vertex = edge.v1 implies edge.v2 in vertex.neighbors
-            vertex = edge.v2 implies edge.v1 in vertex.neighbors
-        }
-    all vertex : Vertex |
-        all neighbor : vertex.neighbors |
-            some edge : Edge {
-                edge.v1 = vertex and edge.v2 = neighbor or
-                edge.v2 = vertex and edge.v1 = neighbor
-            }
+    all graph : Graph | {
+        all vertex : graph.vertices {
+            all edge : graph.edges {
+                vertex = edge.v1 implies edge.v2 in vertex.neighbors.graph
+                vertex = edge.v2 implies edge.v1 in vertex.neighbors.graph
+			}
+        	all neighbor : vertex.neighbors.graph |
+            	some edge : graph.edges {
+                	edge.v1 = vertex and edge.v2 = neighbor or
+                	edge.v2 = vertex and edge.v1 = neighbor
+            	}
+			}
+	}
 }
 
 fact successors { 
@@ -60,3 +62,5 @@ fact graphMembership {
             vertex in g.vertices}
             
 }
+
+run {}
