@@ -22,8 +22,8 @@ pred twoWayNoDuplicateEdges (g: Graph) {
 pred undirectedAcyclic (g : Graph) {
     all v1, v2 : Vertex |
         let e = v1->v2 + v2->v1 |
-            e in neighbors implies
-                e not in ^(neighbors - e)
+            e in neighbors.g implies
+                e not in ^(neighbors.g - e)
 }
 
 pred complete (g : Graph) {
@@ -39,7 +39,7 @@ pred directedAcyclic (g : Graph) {
 
 pred connected (g : Graph) {
     all disj v1, v2 : g.vertices |
-        v1 in v2.^neighbors
+        v1 in v2.^(neighbors.g)
 }
 
 fact isValidGraph{
@@ -49,3 +49,9 @@ fact isValidGraph{
         hasCorrectEdgesVertices[g]
     }
 }
+
+pred differentGraphs (g1, g2 : Graph) {
+	g1.edges != g2.edges
+}
+
+run differentGraphs
