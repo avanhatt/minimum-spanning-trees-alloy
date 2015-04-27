@@ -20,7 +20,7 @@ pred twoWayNoDuplicateEdges (g: Graph) {
 }
 
 pred undirectedAcyclic (g : Graph) {
-    all v1, v2 : Vertex |
+    all v1, v2 : g.vertices |
         let e = v1->v2 + v2->v1 |
             e in neighbors.g implies
                 e not in ^(neighbors.g - e)
@@ -33,8 +33,8 @@ pred complete (g : Graph) {
 }
 
 pred directedAcyclic (g : Graph) {
-    all v : Vertex |
-        v->v not in ^(successors)
+    all v : g.vertices |
+        v->v not in ^(successors.g)
 }
 
 pred connected (g : Graph) {

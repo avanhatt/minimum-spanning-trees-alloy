@@ -2,7 +2,7 @@ open util/integer
 
 sig Vertex {
     neighbors : set Vertex -> Graph,
-    successors : set Vertex
+    successors : set Vertex -> Graph
 }
 
 sig Edge { 
@@ -32,25 +32,27 @@ fact neighbors {
 	}
 }
 
-fact successors { 
-    all vertex : Vertex {
-        all edge : Edge |
-            vertex = edge.v1 implies edge.v2 in vertex.successors
-        all successor : vertex.successors |
-            some edge : Edge |
-                edge.v1 = vertex and edge.v2 = successor
-    }
+fact successors {
+	all graph : Graph | {
+    	all vertex : graph.vertices {
+        	all edge : graph.edges |
+            	vertex = edge.v1 implies edge.v2 in vertex.successors.graph
+        	all successor : vertex.successors.graph |
+            	some edge : graph.edges |
+                	edge.v1 = vertex and edge.v2 = successor
+    	}
+	}
 }
 
 pred hasCorrectEdgesVertices (g : Graph) {
     all edge : g.edges |
         edge.v1 in g.vertices and
         edge.v2 in g.vertices
-    all vertex : g.vertices |
-        all edge : Edge {
-            edge.v1 = vertex implies edge in g.edges
-            edge.v2 = vertex implies edge in g.edges
-        }
+    --all vertex : g.vertices |
+        --all edge : Edge {
+            --edge.v1 = vertex implies edge in g.edges
+            --edge.v2 = vertex implies edge in g.edges
+        --}
 }
 
 fact graphMembership {
