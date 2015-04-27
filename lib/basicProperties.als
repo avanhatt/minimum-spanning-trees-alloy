@@ -37,12 +37,15 @@ pred directedAcyclic (g : Graph) {
         v->v not in ^(successors)
 }
 
+pred connected (g : Graph) {
+    all disj v1, v2 : g.vertices |
+        v1 in v2.^neighbors
+}
+
 fact isValidGraph{
     all g : Graph {
         noSelfEdges[g]
         oneWayNoDuplicateEdges[g]
-         hasCorrectEdgesVertices[g]
+        hasCorrectEdgesVertices[g]
     }
 }
-
-run directedAcyclic
