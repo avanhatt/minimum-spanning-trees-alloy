@@ -17,4 +17,13 @@ pred isMST(g, tree : Graph) {
     }
 }
 
-run isMST
+pred existsMST {
+    one graph: Graph | some tree : Graph {
+		graph.vertices = Vertex
+		complete[graph]
+        isMST[graph, tree]
+	}
+        
+}
+
+run isMST for 3 Vertex, 2 Graph, 3 Edge, 1 Univ
