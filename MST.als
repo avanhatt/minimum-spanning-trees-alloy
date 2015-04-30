@@ -13,17 +13,21 @@ pred isSpanningTree(g, tree : UGraph) {
 pred isInterestingSpanningTree(g, tree : UGraph) {
 	isSpanningTree[g, tree]
 	not undirectedAcyclic[g]
-	all disj g1, g2: Graph |
+	all disj g1, g2: UGraph |
 		g1.edges != g2.edges
+	all edge : Edge |
+		gt[edge.weight, 0]
+	all disj e1, e2 : Edge |
+		e1.weight != e2.weight
 }
 
 pred isMST(g, tree : UGraph) {
-    isSpanningTree[g, tree]
+    isInterestingSpanningTree[g, tree]
     no tree2 : UGraph {
-        isSpanningTree[g, tree2]
-        lt[(sum edge : tree.edges | edge.weight), 
+        isInterestingSpanningTree[g, tree2]
+        gt[(sum edge : tree.edges | edge.weight), 
            (sum edge : tree2.edges | edge.weight)]
 	}
 }
 
-run isInterestingSpanningTree for exactly 3 Vertex, exactly 8 Graph, 3 Edge, 1 Univ
+run isMST for exactly 3 Vertex, exactly 8 Graph, 3 Edge, 1 Univ
