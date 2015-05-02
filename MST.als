@@ -11,23 +11,46 @@ pred isSpanningTree(g, tree : UGraph) {
 }
 
 pred isInterestingSpanningTree(g, tree : UGraph) {
+	g.vertices = Vertex
+	smallWeights
 	isSpanningTree[g, tree]
+	complete[g]
 	not undirectedAcyclic[g]
-	all disj g1, g2: UGraph |
-		g1.edges != g2.edges
-	all edge : Edge |
-		gt[edge.weight, 0]
-	all disj e1, e2 : Edge |
-		e1.weight != e2.weight
+	some e: g.edges | e not in tree.edges
 }
 
-pred isMST(g, tree : UGraph) {
-    isInterestingSpanningTree[g, tree]
-    no tree2 : UGraph {
-        isInterestingSpanningTree[g, tree2]
-        gt[(sum edge : tree.edges | edge.weight), 
-           (sum edge : tree2.edges | edge.weight)]
+fact makingItInteresting {
+	all disj g1, g2: Graph |
+		g1.edges != g2.edges
+	all disj e1, e2: Edge |
+		e1.weight != e2.weight
+	one g : Graph {
+		complete[g] 
+	}
+	all edgeSubset: set Edge { 
+		#edgeSubset = sub[#Vertex, 1] implies
+			some graph: UGraph | edgeSubset = graph.edges
+		some graph: UGraph | edgeSubset = graph.edges implies
+			#edgeSubset = sub[#Vertex, 1] or complete[graph]
 	}
 }
 
-run isMST for exactly 3 Vertex, exactly 8 Graph, 3 Edge, 1 Univ
+pred isMST(g, tree : UGraph) {
+	isInterestingSpanningTree[g, tree]
+		
+	no tree2 : UGraph {
+        	isSpanningTree[g, tree2]
+        	gt[sumOfWeights[tree], sumOfWeights[tree2]]
+	}
+}
+
+fun sumOfWeights(g : Graph) : Int {
+	sum edge : g.edges | edge.weight
+}
+
+pred smallWeights {
+	all e : Edge |
+		e.weight < 10 and e.weight > -10
+}
+
+run isMST for exactly 4 Vertex,  21 Graph, 6 Edge, 10 Int
