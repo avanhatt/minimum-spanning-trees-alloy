@@ -14,7 +14,6 @@ sig Edge {
 }
 {
 	Edge in Graph.edges
-	rels =  v1->v2 + v2->v1
 }
 
 abstract sig Graph {
@@ -31,11 +30,15 @@ sig UGraph extends Graph {}
 {
 	twoWayNoDuplicateEdges
 	undirectedNeighbors
+	all e: edges | 
+		e.rels =  e.v1->e.v2 + e.v2->e.v1
 }
 
 sig DGraph extends Graph {}
 {
 	directedNeighbors
+	all e: edges | 
+		e.rels =  e.v1->e.v2
 }
 
 pred edgesInGraph{
