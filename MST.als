@@ -2,17 +2,16 @@ open util/integer
 open lib/graph
 open lib/properties
 
-pred isSpanningTree(tree, graph: UGraph) {
-	graph.vertices = tree.vertices
-	tree.edges in graph.edges
-	undirectedAcyclic[tree.edges, tree.vertices]
-	connected[tree.edges, tree.vertices]     
+pred isSpanningTree(es: set Edge, graph: UGraph) {
+	graph.vertices = (graph.vertices).(es.rels)
+	es in graph.edges
+	undirectedAcyclic[es, graph.vertices]
+	connected[es, graph.vertices]     
 }
 
-pred isInterestingSpanningTree(tree, graph: UGraph) {
-	isSpanningTree[tree, graph]
+pred isInterestingSpanningTree(es: set Edge, graph: UGraph) {
+	isSpanningTree[es, graph]
 	complete[graph.edges, Vertex]
-	smallWeights
 }
 
 fact noDuplicates {
@@ -22,12 +21,12 @@ fact noDuplicates {
 		e1.weight != e2.weight
 }
 
-pred isMST(tree, graph: UGraph) {
-	isInterestingSpanningTree[tree, graph]
+pred isMST(es: set Edge, graph: UGraph) {
+	isInterestingSpanningTree[es, graph]
 	no edgeSubset: set graph.edges {
 		#edgeSubset = sub[#graph.vertices, 1]
         	connected[edgeSubset, graph.vertices]
-        	gt[sumOfWeights[tree.edges], sumOfWeights[edgeSubset]]
+        	gt[sumOfWeights[es], sumOfWeights[edgeSubset]]
 	}
 }
 
@@ -35,13 +34,15 @@ fun sumOfWeights(es: set Edge) : Int {
 	sum edge : es | edge.weight
 }
 
-pred smallWeights {
+fact smallWeights {
 	all e : Edge |
-		e.weight < 10 and e.weight > -10
+		e.weight < 11 and e.weight > 0
 }
 
 assert alwaysSomeMST {
-	
+	some g: Graph | some es: set Edge |
+		complete[g.edges, Vertex] implies isMST[es, g]
 }
+check alwaysSomeMST  for 5 Vertex,  1 Graph, 10 Edge, 10 Int
 
-//run isMST for exactly 4 Vertex,  2 Graph, 6 Edge, 10 Int
+run isMST for 5 Vertex,  1 Graph, 10 Edge, 10 Int
