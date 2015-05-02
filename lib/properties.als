@@ -7,7 +7,7 @@ pred directedAcyclic (edges : set Edge, verts : set Vertex) {
 		let e = v1->v2 |
 			e in edges.rels implies
 				e not in ^(edges.rels - e)
-
+}
 pred complete (edges : set Edge, verts : set Vertex) {
 	verts = Vertex.(edges.rels)
 	all disj x, y : verts |
