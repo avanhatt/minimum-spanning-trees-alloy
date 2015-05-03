@@ -44,7 +44,6 @@ fact initialState {
 
 fact endState {
 	no last.remainingEdges
-	isMST[last.edgesInMST, last.g]
 }
 
 abstract sig Event {
@@ -57,18 +56,26 @@ sig addEdge extends Event { }
 	post.g = pre.g
 
 	// Go in order of edge weight
-	let minE = minEdge[pre.remainingEdges] {
-		isAddable[minE, pre] => {
-			// Add it to the MST and update the parent pointers
-			post.edgesInMST = pre.edgesInMST + minE
-			post.parentSet = pre.parentSet - (minE.v1 -> minE.v1) + (minE.v1 -> minE.v2)
-		} else {
-			// The clouds/MST are still the same
-			post.edgesInMST = pre.edgesInMST
-			post.parentSet = pre.parentSet
+	let minEs = minEdge[pre.remainingEdges] {
+		some minE : minEs | {
+			isAddable[minE, pre] => {
+				// Add it to the MST and update the parent pointers
+				post.edgesInMST = pre.edgesInMST + minE
+				let p1 = findParent[minE.v1, pre] |
+					let p2 = findParent[minE.v2, pre] |
+						post.parentSet = pre.parentSet - (p1->p1) + (p1->p2)
+			} else {
+				// The clouds/MST are still the same
+				post.edgesInMST = pre.edgesInMST
+				post.parentSet = pre.parentSet
+			}
+			post.remainingEdges = pre.remainingEdges - minE
 		}
-		post.remainingEdges = pre.remainingEdges - minE
 	}
+}
+
+fun findParent(v: Vertex, s: State) : Vertex {
+	{parent: v.^(s.parentSet) | parent->parent in s.parentSet}
 }
 
 fact transitions {
@@ -76,5 +83,15 @@ fact transitions {
 		let s' = s.next |
 			one e: Event | e.pre = s and e.post = s'
 }
+
+fact {
+	some disj e1,e2 : Edge | e1.weight = e2.weight
+}
+
+assert findsMST {
+	isMST[last.edgesInMST, last.g]
+}
+
+check findsMST for 10 Int, exactly 6 Edge, 1 Graph, 4 Vertex, 7 State, 6 Event
 
 run { } for 10 Int, exactly 6 Edge, 1 Graph, 4 Vertex, 7 State, 6 Event

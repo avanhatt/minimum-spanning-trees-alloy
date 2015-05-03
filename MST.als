@@ -17,8 +17,6 @@ pred isInterestingSpanningTree(es: set Edge, graph: UGraph) {
 fact noDuplicates {
 	all disj g1, g2: Graph |
 		g1.edges != g2.edges
-	all disj e1, e2: Edge |
-		e1.weight != e2.weight
 }
 
 pred isMST(es: set Edge, graph: UGraph) {
