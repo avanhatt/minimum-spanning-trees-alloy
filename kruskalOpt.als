@@ -68,19 +68,23 @@ sig addEdge extends Event { }
 			isAddable[minE, pre] => {
 				// Add it to the MST and update the parent pointers
 				post.edgesInMST = pre.edgesInMST + minE
-				lt[minE.v1.(pre.ranks), minE.v2.(pre.ranks)] => {
+				// If r
+				minE.v1.(pre.ranks) = minE.v2.(pre.ranks) =>{
+					let p1 = findParent[minE.v1, pre] | let p2 = findParent[minE.v2, pre] |
+							post.parentSet = pre.parentSet - (p1->p1) + (p1->p2)
+					let curRank = minE.v2.(pre.ranks) | 
+							post.ranks = pre.ranks - (minE.v2 -> curRank) + (minE.v2 -> inc[curRank])
+
+				} else { lt[minE.v1.(pre.ranks), minE.v2.(pre.ranks)] => {
 					let p1 = findParent[minE.v1, pre] | let p2 = findParent[minE.v2, pre] |
 						post.parentSet = pre.parentSet - (p1->p1) + (p1->p2)
-						let curRank = minE.v2.(pre.ranks) | 
-							post.ranks = pre.ranks - (minE.v2 -> curRank) + (minE.v2 -> inc[curRank])
-					
+					post.ranks = pre.ranks
+				
 				} else {
 					let p1 = findParent[minE.v2, pre] | let p2 = findParent[minE.v1, pre] |
 						post.parentSet = pre.parentSet - (p1->p1) + (p1->p2)
-						let curRank = minE.v1.(pre.ranks) | 
-							post.ranks = pre.ranks - (minE.v1 -> curRank) + (minE.v1 -> inc[curRank])
-				
-				}
+					post.ranks = pre.ranks			
+				}}
 			} else {
 				// The clouds/MST are still the same
 				post.edgesInMST = pre.edgesInMST
@@ -118,4 +122,5 @@ assert findsMST {
 check findsMST for 10 Int, 3 Natural, exactly 3 Edge, 1 Graph, 3 Vertex, 4 State, 3 Event
 //check findsMST for 10 Int, 3 Natural, exactly 6 Edge, 1 Graph, 4 Vertex, 7 State, 6 Event
 
-run { } for 10 Int, exactly 6 Edge, 1 Graph, 4 Vertex, 7 State, 6 Event
+run { } for 10 Int, 5 Natural, exactly 6 Edge, 1 Graph, 4 Vertex, 7 State, 6 Event
+//run { } for 10 Int, 9 Natural, exactly 10 Edge, 1 Graph, 5 Vertex, 11 State, 10 Event
