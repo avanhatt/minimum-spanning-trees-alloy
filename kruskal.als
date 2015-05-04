@@ -75,6 +75,7 @@ sig addEdge extends Event { }
 }
 
 fun findParent(v: Vertex, s: State) : Vertex {
+	// parent is the root of the transitive closure (the one that is only related to itself)
 	{parent: v.^(s.parentSet) | parent->parent in s.parentSet}
 }
 
@@ -82,10 +83,6 @@ fact transitions {
 	all s: State - last |
 		let s' = s.next |
 			one e: Event | e.pre = s and e.post = s'
-}
-
-fact {
-	some disj e1,e2 : Edge | e1.weight = e2.weight
 }
 
 assert findsMST {
