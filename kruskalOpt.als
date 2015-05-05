@@ -29,11 +29,6 @@ fun minEdges(es : set Edge) : Edge {
 	{e : es | no e2 : es | lt[e2.weight, e.weight]}
 }
 
-pred isAddable(e : Edge, pre, post : State) {
-	// If they're in different trees, this edge is addable
-	no e.v1.^(pre.parentSet) & e.v2.^(pre.parentSet)
-}
-
 fact initialState {
 	// Otherwise this will return a spanning forest instead of a spanning tree
 	connected[first.g.edges, first.g.vertices]
@@ -63,63 +58,63 @@ sig addEdge extends Event { }
 	post.g = pre.g
 
 	// Go in order of edge weight
-	let minEs = minEdges[pre.remainingEdges] {
-		some minE : minEs | {
-			isAddable[minE, pre, post] => {
+	let minEs = minEdges[pre.remainingEdges] |
+		some minE : minEs |
+		some p1, p2: Vertex {
+			post.remainingEdges = pre.remainingEdges - minE
+			findAndCompress[minE.v1, p1, pre, post]
+			findAndCompress[minE.v2, p2, pre, post]
+			// This edge can be added to the MST
+			(p1 != p2) => {
 				// Add it to the MST and update the parent pointers
 				post.edgesInMST = pre.edgesInMST + minE
 
-				//p1 and p2  are the root vertices of each cloud
-				some p1: Vertex | findAndCompress[minE.v1, p1, pre, post] | 
-				some p2: Vertex | findAndCompress[minE.v2, p2, pre, post]  |
+				// If their ranks are equal, arbitrarily choose that p1 points to p2
 				p1.(pre.ranks) = p2.(pre.ranks) =>{
-					// If their ranks are equal, arbitrarily choose that p1 points to p2
-					updateRoots[minE.v1, minE.v2, pre, post]
-					let curRank = minE.v2.(pre.ranks) | 
-						//increment the rank of ??? should we be incrementing the rank of the parent or the vertex?
-						post.ranks = pre.ranks - (minE.v2 -> curRank) + (minE.v2 -> inc[curRank])
+					// If p1 has a smaller rank, make p1 point to p2
+					updateRoots[minE.v1, minE.v2, p1, p2, pre, post]
+					//increment the rank of the new parent
+					let curRank = p2.(pre.ranks) | 
+						post.ranks = pre.ranks - (p2 -> curRank) + (p2 -> inc[curRank])
 
 				} else { lt[p1.(pre.ranks), p2.(pre.ranks)] => {
-					// If p1 has a smaller rank, it points to p2
-					updateRoots[minE.v1, minE.v2, pre, post]
+					// If p2 has a smaller rank, make p1 point to p2
+					updateRoots[minE.v1, minE.v2, p1, p2, pre, post]
 					post.ranks = pre.ranks
 				
 				} else {
-					// if p2 has a smaller rank, it points to p1
-					updateRoots[minE.v2, minE.v1, pre, post]
+					// If p1 has a smaller rank, make p2 point to p1
+					updateRoots[minE.v2, minE.v1, p2, p1, pre, post]
 					post.ranks = pre.ranks			
 				}}
 			} else {
 				// The clouds/MST are still the same
 				post.edgesInMST = pre.edgesInMST
-				post.parentSet = pre.parentSet
+				updateParents[minE.v1, minE.v2, p1, p2, pre, post]
 				post.ranks = pre.ranks
 			}
-			post.remainingEdges = pre.remainingEdges - minE
 		}
-	}
 }
 
-//merges two clouds by choosing v2 to be the new root
-pred updateParents(v1, v2 : Vertex, pre, post : State) {
+// Everything stays the same, except path compression
+pred updateParents(v1, v2, p1, p2 : Vertex, pre, post : State) {
 	let trans1 = v1.^(pre.parentSet) | let trans2 =  v2.^(pre.parentSet) | //trans1 and trans2 are the vertices in each cloud
-		let p1 = v1.(post.parentSet) | let p2 = v2.(post.parentSet) | // the direct parent of each vertex
-			let others = Vertex - (trans1 + trans2 + p1 + p2) | //everything that's not in either cloud
-				let otherRels = (others -> Vertex) & pre.parentSet |
-					//the parentSet has everything from the first cloud pointing to p1, everything from the second
-					//cloud pointing to p2, everything from neither cloud the same as it was, and p1 pointing to p2
-					post.parentSet = (trans1 -> p1) + (trans2 -> p2) + otherRels
+		let others = Vertex - (trans1 + trans2 + p1 + p2) | //everything that's not in either cloud
+			let otherRels = (others -> Vertex) & pre.parentSet | 
+				//the parentSet has everything from the first cloud pointing to p1, everything from the second
+				//cloud pointing to p2, everything from neither cloud the same as it was, and p1 pointing to p2
+				post.parentSet = (trans1 -> p1) + (trans2 -> p2) + otherRels
 }
 
-//merges two clouds by choosing v2 to be the new root
-pred updateRoots(v1, v2 : Vertex, pre, post : State) {
+// Merge two clouds by choosing v2 to be the new root, allow path compression
+pred updateRoots(v1, v2, p1, p2 : Vertex, pre, post : State) {
+	v1 -> v2 in post.parentSet
 	let trans1 = v1.^(pre.parentSet) | let trans2 =  v2.^(pre.parentSet) | //trans1 and trans2 are the vertices in each cloud
-		let p1 = v1.(post.parentSet) | let p2 = v2.(post.parentSet) | // the direct parent of each vertex
-			let others = Vertex - (trans1 + trans2 + p1 + p2) | //everything that's not in either cloud
-				let otherRels = (others -> Vertex) & pre.parentSet |
-					//the parentSet has everything from the first cloud pointing to p1, everything from the second
-					//cloud pointing to p2, everything from neither cloud the same as it was, and p1 pointing to p2
-					post.parentSet = ((trans1 - p1) -> p1) + (trans2 -> p2) + (p1 -> p2) + otherRels
+		let others = Vertex - (trans1 + trans2 + p1 + p2) | 
+			let otherRels = (others -> Vertex) & pre.parentSet | //everything that's not in either cloud
+				//the parentSet has everything from the first cloud pointing to p1, everything from the second
+				//cloud pointing to p2, everything from neither cloud the same as it was, and p1 pointing to p2
+				post.parentSet = ((trans1 - p1) -> p1) + (trans2 -> p2) + (p1 -> p2) + otherRels
 }
 
 pred findAndCompress(v, p : Vertex, pre, post : State) {
@@ -142,6 +137,9 @@ fact transitions {
 assert findsMST {
 	isMST[last.edgesInMST, last.g]
 }
+
+// for n Vertex -> 10 Int, (n-1) Natural, exactly (n choose 2) Edge, 1 Graph
+//	  		     n Vertex,  (n choose 2)+1 State, (n choose 2) Event
 
 //check findsMST for 10 Int, 3 Natural, exactly 3 Edge, 1 Graph, 3 Vertex, 4 State, 3 Event
 check findsMST for 10 Int, 3 Natural, exactly 6 Edge, 1 Graph, 4 Vertex, 7 State, 6 Event
