@@ -101,10 +101,20 @@ sig addEdge extends Event { }
 }
 
 //merges two clouds by choosing v2 to be the new root
-pred updateRoots(v1, v2 : Vertex, pre, post : State) {
-	v1 -> v2 in post.parentSet // IS THIS LINE NECESSARY?
+pred updateParents(v1, v2 : Vertex, pre, post : State) {
 	let trans1 = v1.^(pre.parentSet) | let trans2 =  v2.^(pre.parentSet) | //trans1 and trans2 are the vertices in each cloud
-		let p1 = v1.(pre.parentSet) | let p2 = v2.(pre.parentSet) | // the direct parent of each vertex
+		let p1 = v1.(post.parentSet) | let p2 = v2.(post.parentSet) | // the direct parent of each vertex
+			let others = Vertex - (trans1 + trans2 + p1 + p2) | //everything that's not in either cloud
+				let otherRels = (others -> Vertex) & pre.parentSet |
+					//the parentSet has everything from the first cloud pointing to p1, everything from the second
+					//cloud pointing to p2, everything from neither cloud the same as it was, and p1 pointing to p2
+					post.parentSet = (trans1 -> p1) + (trans2 -> p2) + otherRels
+}
+
+//merges two clouds by choosing v2 to be the new root
+pred updateRoots(v1, v2 : Vertex, pre, post : State) {
+	let trans1 = v1.^(pre.parentSet) | let trans2 =  v2.^(pre.parentSet) | //trans1 and trans2 are the vertices in each cloud
+		let p1 = v1.(post.parentSet) | let p2 = v2.(post.parentSet) | // the direct parent of each vertex
 			let others = Vertex - (trans1 + trans2 + p1 + p2) | //everything that's not in either cloud
 				let otherRels = (others -> Vertex) & pre.parentSet |
 					//the parentSet has everything from the first cloud pointing to p1, everything from the second
@@ -119,7 +129,7 @@ pred findAndCompress(v, p : Vertex, pre, post : State) {
 	
 	// to compress the tree, all vertices in the transitive closure of v in the parentSet now point directly to p
 	all disj v1, v2 : (v.^(pre.parentSet) + v) |
-		v1 -> v2 in post.parentSet implies v2 = p
+		v1 -> v2 in post.parentSet iff v2 = p
 }
 
 fact transitions {
@@ -132,8 +142,6 @@ fact transitions {
 assert findsMST {
 	isMST[last.edgesInMST, last.g]
 }
-
-run updateRoots for 10 Int, 3 Natural, exactly 6 Edge, 1 Graph, 4 Vertex, 7 State, 6 Event
 
 //check findsMST for 10 Int, 3 Natural, exactly 3 Edge, 1 Graph, 3 Vertex, 4 State, 3 Event
 check findsMST for 10 Int, 3 Natural, exactly 6 Edge, 1 Graph, 4 Vertex, 7 State, 6 Event
