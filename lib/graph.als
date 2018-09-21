@@ -94,5 +94,3 @@ pred directedNeighbors {
 					x = e.v1 and y = e.v2
 			}
 }
-
-run {}
